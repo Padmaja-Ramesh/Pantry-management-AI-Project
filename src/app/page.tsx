@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Stack, Typography, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import { Box, Stack, Typography, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, ListItemText } from "@mui/material";
 import { firestore } from "@/firebase";
 import { collection, query, getDocs, getDoc, doc, deleteDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -12,6 +12,7 @@ export default function Home() {
   const [pantry, setPantry] = useState<PantryItem[]>([]);
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState("");
+  const [filteredItems, setFilteredItems] = useState<string[]>([]);
   const db = collection(firestore, 'Pantry');
 
   // helper functions => updatePantry, addPantryItem, removePantryItem
@@ -73,17 +74,36 @@ export default function Home() {
     }
   }
 
-  // handler => AddPantryItem, OpenModel, CloseModel
+  // handler => AddPantryItem, OpenModel, CloseModel, searchChange
   const handleAddPantryItem = () => {
     if (itemName.trim()) {
-      console.log(itemName)
       addPantryItem(itemName);
+      setItemName("");
+      setFilteredItems([]);
       handleCloseModal()
     }
   };
 
   const handleOpenModal = () => setOpen(true);
-  const handleCloseModal = () => setOpen(false);
+  const handleCloseModal = () => {setOpen(false); setItemName(""); setFilteredItems([])};
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setItemName(value);
+    if (value.length > 0) {
+      const filtered = pantry
+        .map(item => item.name)
+        .filter(name => name.toLowerCase().includes(value.toLowerCase()));
+      setFilteredItems(filtered);
+    } else {
+      setFilteredItems([]);
+    }
+  };
+
+  const handleSelectItem=(Item:string) =>{
+    setItemName(Item);
+    setFilteredItems([]);
+  }
 
   useEffect(() => {
     updatePantry();
@@ -119,14 +139,21 @@ export default function Home() {
     <Dialog open={open} onClose={handleCloseModal}>
       <DialogTitle>Add Pantry Item</DialogTitle>
       <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          label="Item Name"
-          fullWidth
-          value={itemName}
-          onChange={(e) => setItemName(e.target.value)}
-        />
+      <TextField
+            autoFocus
+            margin="dense"
+            label="Item Name"
+            fullWidth
+            value={itemName}
+            onChange={handleSearchChange}
+          />
+          <List>
+            {filteredItems.map((item) => (
+              <ListItem button key={item} onClick={() => handleSelectItem(item)}>
+                <ListItemText primary={item} />
+              </ListItem>
+            ))}
+          </List>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCloseModal} color="primary">
