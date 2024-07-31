@@ -31,7 +31,7 @@ export default function Home() {
     }
   };
 
-  const removePantryItem = async(item) =>{
+  const removePantryItem = async(item: string) =>{
     try {
       const docRef = doc(db, item);
       const docSnap = await getDoc(docRef);
@@ -52,7 +52,7 @@ export default function Home() {
     }
   }
 
-  const addPantryItem = async(item) =>{
+  const addPantryItem = async(item : string) =>{
     try {
       const docRef = doc(db, item);
       console.log(docRef)
